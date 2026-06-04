@@ -1,0 +1,12 @@
+### Create interviewer
+POST http://localhost:3000/v1/interviewers
+Content-Type: application/json
+
+{
+  "firstName": "Jan",
+  "lastName": "Kowalski"
+}
+
+### Get all interviewers
+GET http://localhost:3000/v1/interviewers
+Content-Type: application/json

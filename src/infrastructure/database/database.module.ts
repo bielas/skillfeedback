@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EntityModule } from 'src/adapter/output/db/entity/entity.module';
-import configuration from 'src/config/app.config';
+import configuration from 'src/infrastructure/config/app.config';
 
 const typeOrmConfig = TypeOrmModule.forRootAsync({
   useFactory: () => ({
@@ -17,6 +16,6 @@ const typeOrmConfig = TypeOrmModule.forRootAsync({
 });
 
 @Module({
-  imports: [EntityModule, typeOrmConfig],
+  imports: [typeOrmConfig],
 })
 export class DatabaseModule {}
