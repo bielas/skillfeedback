@@ -1,5 +1,5 @@
 ### Create interviewer
-POST http://localhost:3000/v1/interviewers
+POST http://localhost:3000/api/v1/interviewers
 Content-Type: application/json
 
 {
@@ -8,5 +8,5 @@ Content-Type: application/json
 }
 
 ### Get all interviewers
-GET http://localhost:3000/v1/interviewers
+GET http://localhost:3000/api/v1/interviewers
 Content-Type: application/json
