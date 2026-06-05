@@ -63,6 +63,11 @@ export default tseslint.config(
           capture: ['domainName'],
         },
         {
+          type: 'domain-shared',
+          pattern: 'src/*/shared/**',
+          capture: ['domainName'],
+        },
+        {
           type: 'module',
           pattern: 'src/*/*.module.ts',
           capture: ['domainName'],
@@ -100,6 +105,12 @@ export default tseslint.config(
                     captured: { domainName: '{{from.captured.domainName}}' },
                   },
                 },
+                {
+                  to: {
+                    type: 'domain-shared',
+                    captured: { domainName: '{{from.captured.domainName}}' },
+                  },
+                },
                 { to: { type: 'shared' } },
               ],
             },
@@ -115,6 +126,12 @@ export default tseslint.config(
                 {
                   to: {
                     type: 'domain',
+                    captured: { domainName: '{{from.captured.domainName}}' },
+                  },
+                },
+                {
+                  to: {
+                    type: 'domain-shared',
                     captured: { domainName: '{{from.captured.domainName}}' },
                   },
                 },
@@ -142,6 +159,12 @@ export default tseslint.config(
                     captured: { domainName: '{{from.captured.domainName}}' },
                   },
                 },
+                {
+                  to: {
+                    type: 'domain-shared',
+                    captured: { domainName: '{{from.captured.domainName}}' },
+                  },
+                },
                 { to: { type: 'shared' } },
               ],
             },
@@ -160,8 +183,26 @@ export default tseslint.config(
                     captured: { domainName: '{{from.captured.domainName}}' },
                   },
                 },
+                {
+                  to: {
+                    type: 'domain-shared',
+                    captured: { domainName: '{{from.captured.domainName}}' },
+                  },
+                },
                 { to: { type: 'shared' } },
                 { to: { type: 'infrastructure' } },
+              ],
+            },
+            {
+              from: { type: 'domain-shared' },
+              allow: [
+                {
+                  to: {
+                    type: 'domain-shared',
+                    captured: { domainName: '{{from.captured.domainName}}' },
+                  },
+                },
+                { to: { type: 'shared' } },
               ],
             },
             {
@@ -188,6 +229,12 @@ export default tseslint.config(
                 {
                   to: {
                     type: 'adapter-output',
+                    captured: { domainName: '{{from.captured.domainName}}' },
+                  },
+                },
+                {
+                  to: {
+                    type: 'domain-shared',
                     captured: { domainName: '{{from.captured.domainName}}' },
                   },
                 },
