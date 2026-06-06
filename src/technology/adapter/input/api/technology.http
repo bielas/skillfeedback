@@ -1,0 +1,23 @@
+### Create Technology
+POST http://localhost:3000/api/v1/technologies
+Content-Type: application/json
+
+{
+  "name": "REACT",
+  "category": "FRONTEND"
+}
+
+### Get all Technologies
+GET http://localhost:3000/api/v1/technologies
+
+### Get Technology by id
+GET http://localhost:3000/api/v1/technologies/your-id-here
+
+### Deactivate Technology
+PATCH http://localhost:3000/api/v1/technologies/your-id-here/deactivate
+
+### Activate Technology
+PATCH http://localhost:3000/api/v1/technologies/your-id-here/activate
+
+### Delete Technology
+DELETE http://localhost:3000/api/v1/technologies/your-id-here

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import configuration from 'src/infrastructure/config/app.config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DomainExceptionFilter } from 'src/infrastructure/filter/domain-exception.filter';
 
 const setupPipes = (app: INestApplication) => {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
@@ -14,6 +15,10 @@ const setupPipes = (app: INestApplication) => {
 
 const setupVersioning = (app: INestApplication) => {
   app.enableVersioning({ type: VersioningType.URI });
+};
+
+const setupFilters = (app: INestApplication) => {
+  app.useGlobalFilters(new DomainExceptionFilter());
 };
 
 const setupSwagger = (app: INestApplication) => {
@@ -35,6 +40,7 @@ const bootstrap = async () => {
     exclude: ['swagger', 'swagger-json'],
   });
 
+  setupFilters(app);
   setupPipes(app);
   setupVersioning(app);
   setupSwagger(app);

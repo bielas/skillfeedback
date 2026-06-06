@@ -1,3 +1,4 @@
+import { TechnologyModule } from './technology/technology.module';
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/infrastructure/database/database.module';
 import { ConfigModule } from '@nestjs/config';
@@ -6,6 +7,7 @@ import { InterviewerModule } from 'src/interviewer/interviewer.module';
 
 @Module({
   imports: [
+    TechnologyModule,
     DatabaseModule,
     InterviewerModule,
     ConfigModule.forRoot({

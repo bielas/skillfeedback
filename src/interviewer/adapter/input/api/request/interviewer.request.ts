@@ -1,6 +1,12 @@
-import { Interviewer } from 'src/interviewer/core/domain/interviewer';
-
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class InterviewerRequest {
   @IsNotEmpty()
@@ -14,11 +20,12 @@ export class InterviewerRequest {
   @MinLength(2)
   @MaxLength(50)
   lastName: string;
-}
 
-export const toDomain = (request: InterviewerRequest): Interviewer => {
-  const interviewer = new Interviewer(request.firstName, request.lastName);
-  interviewer.createdAt = new Date();
-  interviewer.updatedAt = new Date();
-  return interviewer;
-};
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @IsArray()
+  @IsUUID('4', { each: true })
+  technologyIds: string[];
+}

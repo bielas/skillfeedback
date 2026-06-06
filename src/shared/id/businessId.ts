@@ -1,11 +1,11 @@
-import { ValidationException } from 'src/shared/exception/validation.exception';
+import { ValidationError } from 'src/shared/error/validation.error';
 
 export class BusinessId {
   private constructor(public readonly value: string) {}
 
   static of(value: string): BusinessId {
     if (!value.trim()) {
-      throw new ValidationException('value is empty');
+      throw new ValidationError('value is empty');
     }
 
     return new BusinessId(value);

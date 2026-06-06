@@ -1,35 +1,31 @@
-import { Interviewer } from 'src/interviewer/core/domain/interviewer';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { BaseEntity } from 'src/infrastructure/database/base.entity';
+import { InterviewerStatus } from 'src/interviewer/core/domain/interviewer';
+import { TechnologyEntity } from 'src/technology/adapter/output/db/technology.entity';
 
-@Entity()
-export class InterviewerEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+@Entity('interviewers')
+export class InterviewerEntity extends BaseEntity {
   @Column()
   firstName: string;
 
   @Column()
   lastName: string;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column()
+  email: string;
+
+  @Column({
+    type: 'enum',
+    enum: InterviewerStatus,
+    default: InterviewerStatus.ACTIVE,
+  })
+  status: InterviewerStatus;
+
+  @ManyToMany(() => TechnologyEntity, { cascade: true })
+  @JoinTable({
+    name: 'interviewer_technologies',
+    joinColumn: { name: 'interviewer_id' },
+    inverseJoinColumn: { name: 'technology_id' },
+  })
+  technologies: TechnologyEntity[];
 }
-
-export const toDomain = (entity: InterviewerEntity): Interviewer => {
-  const interviewer = new Interviewer(entity.firstName, entity.lastName);
-  interviewer.createdAt = new Date();
-  interviewer.updatedAt = new Date();
-  return interviewer;
-};
-
-export const toEntity = (interviewer: Interviewer): InterviewerEntity => {
-  const entity = new InterviewerEntity();
-  // entity.businessId = interviewer.businessId.value;
-  entity.firstName = interviewer.firstName;
-  entity.lastName = interviewer.lastName;
-  // entity.status = interviewer.status;
-  // entity.createdAt = interviewer.createdAt;
-  // entity.updatedAt = interviewer.updatedAt;
-  return entity;
-};

@@ -1,12 +1,45 @@
+@baseUrl = http://localhost:3000/api/v1
+@technologyId = d5b4baa6-2b3f-4b63-9950-b8c24c7eb741
+@interviewerId = ef1e2c3a-b44c-4411-9893-1e758495f8db
+
 ### Create interviewer
-POST http://localhost:3000/api/v1/interviewers
+# @name createInterviewer
+POST {{baseUrl}}/interviewers
 Content-Type: application/json
 
 {
   "firstName": "Jan",
-  "lastName": "Kowalski"
+  "lastName": "Kowalski",
+  "email": "jan.kowalski@example.com",
+  "technologyIds": [
+    "{{technologyId}}"
+  ]
 }
 
 ### Get all interviewers
-GET http://localhost:3000/api/v1/interviewers
+GET {{baseUrl}}/interviewers
+
+### Get interviewer by id
+GET {{baseUrl}}/interviewers/{{interviewerId}}
+
+### Update interviewer details
+PATCH {{baseUrl}}/interviewers/{{interviewerId}}
 Content-Type: application/json
+
+{
+  "firstName": "Jan",
+  "lastName": "Nowak",
+  "email": "jan.nowak@example.com"
+}
+
+### Add technology to interviewer
+POST {{baseUrl}}/interviewers/{{interviewerId}}/technologies/{{technologyId}}
+
+### Remove technology from interviewer
+DELETE {{baseUrl}}/interviewers/{{interviewerId}}/technologies/{{technologyId}}
+
+### Deactivate interviewer
+PATCH {{baseUrl}}/interviewers/{{interviewerId}}/deactivate
+
+### Activate interviewer
+PATCH {{baseUrl}}/interviewers/{{interviewerId}}/activate
