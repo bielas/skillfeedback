@@ -253,23 +253,13 @@ DELETE http://localhost:3000/api/v1/${domainName}s/your-id-here
     // adapter — output
     {
       path: `${root}/adapter/output/db/${domainName}.entity.ts`,
-      content: `import { Column, Entity } from 'typeorm';
+      content: `import { Entity } from 'typeorm';
 import { BaseEntity } from 'src/infrastructure/database/base.entity';
 
 @Entity('${domainName}s')
 export class ${pascal}Entity extends BaseEntity {
   // add columns
 }
-
-export const toDomain = (entity: ${pascal}Entity): any => {
-  throw new Error('Not implemented');
-};
-
-export const toEntity = (domain: any): ${pascal}Entity => {
-  const entity = new ${pascal}Entity();
-  // map fields
-  return entity;
-};
 `,
     },
     {
@@ -279,8 +269,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ${pascal}Repository } from '../../../core/domain/${domainName}.repository';
 import { ${pascal} } from '../../../core/domain/${domainName}';
-import { ${pascal}Entity, toDomain, toEntity } from './${domainName}.entity';
+import { ${pascal}Entity } from './${domainName}.entity';
 import { BusinessId } from 'src/shared/id/businessId';
+
+const toDomain = (entity: ${pascal}Entity): ${pascal} => {
+  throw new Error('Not implemented');
+};
+
+const toEntity = (domain: ${pascal}): ${pascal}Entity => {
+  const entity = new ${pascal}Entity();
+  // map fields
+  return entity;
+};
 
 @Injectable()
 export class ${pascal}PostgresRepository implements ${pascal}Repository {
@@ -304,7 +304,7 @@ export class ${pascal}PostgresRepository implements ${pascal}Repository {
 
   async findAll(): Promise<${pascal}[]> {
     const entities = await this.repo.find();
-    return entities.map((entity) => toDomain(entity));
+    return entities.map(toDomain);
   }
 
   async update(domain: ${pascal}): Promise<${pascal}> {
