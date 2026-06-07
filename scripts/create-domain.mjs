@@ -53,36 +53,95 @@ export const ${pascal}Repository = Symbol('${pascal}Repository');
 `,
     },
 
-    // application
+    // application — commands
     {
-      path: `${root}/core/application/${domainName}.service.ts`,
-      content: `import { Inject, Injectable } from '@nestjs/common';
-import { ${pascal} } from '../domain/${domainName}';
-import { ${pascal}Repository } from '../domain/${domainName}.repository';
-import { BusinessId } from 'src/shared/id/businessId';
+      path: `${root}/core/application/command/create-${domainName}.command.ts`,
+      content: `export class Create${pascal}Command {}
+`,
+    },
 
-@Injectable()
-export class ${pascal}Service {
+    // application — queries
+    {
+      path: `${root}/core/application/query/get-all-${domainName}s.query.ts`,
+      content: `export class GetAll${pascal}sQuery {}
+`,
+    },
+    {
+      path: `${root}/core/application/query/get-${domainName}.query.ts`,
+      content: `export class Get${pascal}Query {
+  constructor(readonly businessId: string) {}
+}
+`,
+    },
+
+    // application — command handlers
+    {
+      path: `${root}/core/application/handler/create-${domainName}.handler.ts`,
+      content: `import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
+import { Create${pascal}Command } from '../command/create-${domainName}.command';
+import { ${pascal}Repository } from '../../domain/${domainName}.repository';
+import { ${pascal} } from '../../domain/${domainName}';
+
+@CommandHandler(Create${pascal}Command)
+export class Create${pascal}Handler
+  implements ICommandHandler<Create${pascal}Command>
+{
   constructor(
     @Inject(${pascal}Repository)
     private readonly repository: ${pascal}Repository,
   ) {}
 
-  async create(): Promise<${pascal}> {
+  execute(): Promise<${pascal}> {
     const entity = new ${pascal}();
     return this.repository.create(entity);
   }
+}
+`,
+    },
 
-  async findOne(businessId: BusinessId): Promise<${pascal}> {
-    return this.repository.findOne(businessId);
-  }
+    // application — query handlers
+    {
+      path: `${root}/core/application/handler/get-all-${domainName}s.handler.ts`,
+      content: `import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
+import { GetAll${pascal}sQuery } from '../query/get-all-${domainName}s.query';
+import { ${pascal}Repository } from '../../domain/${domainName}.repository';
+import { ${pascal} } from '../../domain/${domainName}';
 
-  async findAll(): Promise<${pascal}[]> {
+@QueryHandler(GetAll${pascal}sQuery)
+export class GetAll${pascal}sHandler
+  implements IQueryHandler<GetAll${pascal}sQuery>
+{
+  constructor(
+    @Inject(${pascal}Repository)
+    private readonly repository: ${pascal}Repository,
+  ) {}
+
+  execute(): Promise<${pascal}[]> {
     return this.repository.findAll();
   }
+}
+`,
+    },
+    {
+      path: `${root}/core/application/handler/get-${domainName}.handler.ts`,
+      content: `import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+import { Inject } from '@nestjs/common';
+import { Get${pascal}Query } from '../query/get-${domainName}.query';
+import { ${pascal}Repository } from '../../domain/${domainName}.repository';
+import { ${pascal} } from '../../domain/${domainName}';
+import { BusinessId } from 'src/shared/id/businessId';
 
-  async delete(businessId: BusinessId): Promise<void> {
-    await this.repository.delete(businessId);
+@QueryHandler(Get${pascal}Query)
+export class Get${pascal}Handler implements IQueryHandler<Get${pascal}Query> {
+  constructor(
+    @Inject(${pascal}Repository)
+    private readonly repository: ${pascal}Repository,
+  ) {}
+
+  execute(query: Get${pascal}Query): Promise<${pascal}> {
+    return this.repository.findOne(BusinessId.of(query.businessId));
   }
 }
 `,
@@ -117,42 +176,54 @@ export class ${pascal}Response {
     {
       path: `${root}/adapter/input/api/${domainName}.controller.ts`,
       content: `import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ${pascal}Service } from '../../../core/application/${domainName}.service';
 import { ${pascal}Response } from './response/${domainName}.response';
 import { Create${pascal}Request } from './request/create-${domainName}.request';
-import { BusinessId } from 'src/shared/id/businessId';
+import { Create${pascal}Command } from '../../../core/application/command/create-${domainName}.command';
+import { GetAll${pascal}sQuery } from '../../../core/application/query/get-all-${domainName}s.query';
+import { Get${pascal}Query } from '../../../core/application/query/get-${domainName}.query';
+import { ${pascal} } from '../../../core/domain/${domainName}';
 
 @ApiTags('${pascal}')
 @Controller({ path: '${domainName}s', version: ['1'] })
 export class ${pascal}Controller {
-  constructor(private readonly service: ${pascal}Service) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new ${domainName}' })
   async create(@Body() body: Create${pascal}Request): Promise<${pascal}Response> {
-    const entity = await this.service.create();
+    const entity = await this.commandBus.execute<Create${pascal}Command, ${pascal}>(
+      new Create${pascal}Command(),
+    );
     return ${pascal}Response.from(entity);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all ${domainName}s' })
   async findAll(): Promise<${pascal}Response[]> {
-    const entities = await this.service.findAll();
+    const entities = await this.queryBus.execute<GetAll${pascal}sQuery, ${pascal}[]>(
+      new GetAll${pascal}sQuery(),
+    );
     return entities.map((entity) => ${pascal}Response.from(entity));
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get ${domainName} by id' })
   async findOne(@Param('id') id: string): Promise<${pascal}Response> {
-    const entity = await this.service.findOne(BusinessId.of(id));
+    const entity = await this.queryBus.execute<Get${pascal}Query, ${pascal}>(
+      new Get${pascal}Query(id),
+    );
     return ${pascal}Response.from(entity);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete ${domainName}' })
   async delete(@Param('id') id: string): Promise<void> {
-    await this.service.delete(BusinessId.of(id));
+    // TODO: add DeleteCommand
   }
 }
 `,
@@ -251,26 +322,32 @@ export class ${pascal}PostgresRepository implements ${pascal}Repository {
     {
       path: `${root}/${domainName}.module.ts`,
       content: `import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ${pascal}Controller } from './adapter/input/api/${domainName}.controller';
-import { ${pascal}Service } from './core/application/${domainName}.service';
 import { ${pascal}PostgresRepository } from './adapter/output/db/${domainName}.postgres.repository';
 import { ${pascal}Entity } from './adapter/output/db/${domainName}.entity';
 import { ${pascal}Repository } from './core/domain/${domainName}.repository';
+import { Create${pascal}Handler } from './core/application/handler/create-${domainName}.handler';
+import { GetAll${pascal}sHandler } from './core/application/handler/get-all-${domainName}s.handler';
+import { Get${pascal}Handler } from './core/application/handler/get-${domainName}.handler';
+
+const CommandHandlers = [Create${pascal}Handler];
+
+const QueryHandlers = [GetAll${pascal}sHandler, Get${pascal}Handler];
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([${pascal}Entity]),
-  ],
+  imports: [CqrsModule, TypeOrmModule.forFeature([${pascal}Entity])],
   controllers: [${pascal}Controller],
   providers: [
-    ${pascal}Service,
+    ...CommandHandlers,
+    ...QueryHandlers,
     {
       provide: ${pascal}Repository,
       useClass: ${pascal}PostgresRepository,
     },
   ],
-  exports: [${pascal}Service],
+  exports: [CqrsModule],
 })
 export class ${pascal}Module {}
 `,

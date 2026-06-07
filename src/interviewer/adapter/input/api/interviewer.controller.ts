@@ -7,24 +7,44 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InterviewerResponse } from './response/interviewer.response';
 import { InterviewerRequest } from './request/interviewer.request';
 import { UpdateInterviewerRequest } from './request/update-interviewer.request';
-import { BusinessId } from 'src/shared/id/businessId';
-import { InterviewerService } from '../../../core/application/interviewer.service';
+import { CreateInterviewerCommand } from '../../../core/application/command/create-interviewer.command';
+import { UpdateInterviewerDetailsCommand } from '../../../core/application/command/update-interviewer-details.command';
+import { AddTechnologyToInterviewerCommand } from '../../../core/application/command/add-technology-to-interviewer.command';
+import { RemoveTechnologyFromInterviewerCommand } from '../../../core/application/command/remove-technology-from-interviewer.command';
+import { ActivateInterviewerCommand } from '../../../core/application/command/activate-interviewer.command';
+import { DeactivateInterviewerCommand } from '../../../core/application/command/deactivate-interviewer.command';
+import { GetAllInterviewersQuery } from '../../../core/application/query/get-all-interviewers.query';
+import { GetInterviewerQuery } from '../../../core/application/query/get-interviewer.query';
+import { Interviewer } from '../../../core/domain/interviewer';
 
 @ApiTags('Interviewer')
 @Controller({ path: 'interviewers', version: ['1'] })
 export class InterviewerController {
-  constructor(private readonly service: InterviewerService) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new interviewer' })
   async create(@Body() body: InterviewerRequest): Promise<InterviewerResponse> {
-    const interviewer = await this.service.create(
-      { firstName: body.firstName, lastName: body.lastName, email: body.email },
-      body.technologyIds,
+    const interviewer = await this.commandBus.execute<
+      CreateInterviewerCommand,
+      Interviewer
+    >(
+      new CreateInterviewerCommand(
+        {
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: body.email,
+        },
+        body.technologyIds,
+      ),
     );
     return InterviewerResponse.from(interviewer);
   }
@@ -32,14 +52,20 @@ export class InterviewerController {
   @Get()
   @ApiOperation({ summary: 'Get all interviewers' })
   async findAll(): Promise<InterviewerResponse[]> {
-    const interviewers = await this.service.findAll();
+    const interviewers = await this.queryBus.execute<
+      GetAllInterviewersQuery,
+      Interviewer[]
+    >(new GetAllInterviewersQuery());
     return interviewers.map((i) => InterviewerResponse.from(i));
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get interviewer by id' })
   async findOne(@Param('id') id: string): Promise<InterviewerResponse> {
-    const interviewer = await this.service.findOne(BusinessId.of(id));
+    const interviewer = await this.queryBus.execute<
+      GetInterviewerQuery,
+      Interviewer
+    >(new GetInterviewerQuery(id));
     return InterviewerResponse.from(interviewer);
   }
 
@@ -49,10 +75,10 @@ export class InterviewerController {
     @Param('id') id: string,
     @Body() body: UpdateInterviewerRequest,
   ): Promise<InterviewerResponse> {
-    const interviewer = await this.service.updateDetails(
-      BusinessId.of(id),
-      body,
-    );
+    const interviewer = await this.commandBus.execute<
+      UpdateInterviewerDetailsCommand,
+      Interviewer
+    >(new UpdateInterviewerDetailsCommand(id, body));
     return InterviewerResponse.from(interviewer);
   }
 
@@ -62,10 +88,10 @@ export class InterviewerController {
     @Param('id') id: string,
     @Param('technologyId') technologyId: string,
   ): Promise<InterviewerResponse> {
-    const interviewer = await this.service.addTechnology(
-      BusinessId.of(id),
-      technologyId,
-    );
+    const interviewer = await this.commandBus.execute<
+      AddTechnologyToInterviewerCommand,
+      Interviewer
+    >(new AddTechnologyToInterviewerCommand(id, technologyId));
     return InterviewerResponse.from(interviewer);
   }
 
@@ -75,22 +101,22 @@ export class InterviewerController {
     @Param('id') id: string,
     @Param('technologyId') technologyId: string,
   ): Promise<InterviewerResponse> {
-    const interviewer = await this.service.removeTechnology(
-      BusinessId.of(id),
-      technologyId,
-    );
+    const interviewer = await this.commandBus.execute<
+      RemoveTechnologyFromInterviewerCommand,
+      Interviewer
+    >(new RemoveTechnologyFromInterviewerCommand(id, technologyId));
     return InterviewerResponse.from(interviewer);
   }
 
   @Patch(':id/deactivate')
   @ApiOperation({ summary: 'Deactivate interviewer' })
   async deactivate(@Param('id') id: string): Promise<void> {
-    await this.service.deactivate(BusinessId.of(id));
+    await this.commandBus.execute(new DeactivateInterviewerCommand(id));
   }
 
   @Patch(':id/activate')
   @ApiOperation({ summary: 'Activate interviewer' })
   async activate(@Param('id') id: string): Promise<void> {
-    await this.service.activate(BusinessId.of(id));
+    await this.commandBus.execute(new ActivateInterviewerCommand(id));
   }
 }
